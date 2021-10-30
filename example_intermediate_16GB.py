@@ -26,7 +26,12 @@ from utils import (
     ERA_COL,
     DATA_TYPE_COL,
     TARGET_COL, 
-    EXAMPLE_PREDS_COL    
+    EXAMPLE_PREDS_COL,
+    ar1,
+    autocorr_penalty,
+    smart_sharpe,
+    spearmanr,    
+    era_boost_train    
     )
 
 napi = NumerAPI()
@@ -49,7 +54,11 @@ print('Reading medium training data')
 # read the feature metadata and get the "small" feature set
 with open("features/features.json", "r") as f:
     feature_metadata = json.load(f)
-features = feature_metadata["feature_sets"]["medium"]
+
+# select feature set
+features = feature_metadata["feature_sets"]["medium"] # briefly uses 100% of 16GB, @15.4GB on average
+# features = feature_metadata["feature_sets"]["small"] # uses 1< 10GB
+
 # read in just those features along with era and target columns
 read_columns = features + [ERA_COL, DATA_TYPE_COL, TARGET_COL]
 training_data = pd.read_parquet('training_data_int8.parquet', columns=read_columns)
@@ -75,66 +84,17 @@ model_name = f"model_target" # the final iteration
 print(f"loading {model_name}")
 model = load_model(model_name)
 if not model:
-
-    def ar1(x):
-        return np.corrcoef(x[:-1], x[1:])[0,1]
-
-    def autocorr_penalty(x):
-        n = len(x)
-        p = ar1(x)
-        return np.sqrt(1 + 2*np.sum ([((n - i)/n)*p**i for i in range(1,n)]))
-
-    def smart_sharpe(x):
-        return np.mean(x)/(np.std(x, ddof=1)*autocorr_penalty(x))
-
-    def spearmanr(target, pred):
-        return np.corrcoef(
-            target,
-            pred.rank(pct=True, method="first")
-        )[0, 1]
-
-    def era_boost_train(X, y, era_col, proportion, md, ne, ni):
-        model = XGBRegressor(max_depth=md, learning_rate=0.001, n_estimators=ne, n_jobs=36, colsample_bytree=0.1)
-        features = X.columns
-        model.fit(X, y)
-        new_df = X.copy()
-        new_df[TARGET_COL] = y
-        new_df["era"] = era_col
-
-        for i in range(ni-1):
-            preds = model.predict(X)
-            new_df["pred"] = preds
-            era_scores = pd.Series(dtype='float32', index=new_df["era"].unique())
-
-            for era in new_df["era"].unique():
-                era_df = new_df[new_df["era"] == era]
-                era_scores[era] = spearmanr(era_df["pred"], era_df[TARGET_COL])
-            
-            era_scores.sort_values(inplace=False)
-            worst_eras = era_scores[era_scores <= era_scores.quantile(proportion)].index
-
-            worst_df = new_df[new_df["era"].isin(worst_eras)]
-            era_scores.sort_index(inplace=True)
-
-            print(f"md{md}_ne{ne}_ni{i}_{TARGET_COL}, auto corr: {ar1(era_scores)}, mean corr: {np.mean(era_scores)}, sharpe: {np.mean(era_scores)/np.std(era_scores)}, smart sharpe: {smart_sharpe(era_scores)}")
-
-            model.n_estimators += ne
-            booster = model.get_booster()
-            model.fit(worst_df[features], worst_df[TARGET_COL], xgb_model=booster)
-            save_model(model, "md" + str(md) + "_ne" + str(ne) + "_ni" + str(i) + "_" + str(TARGET_COL)) # save each iteration as a model for later comparison
-
-            gc.collect()
-         
-        return model
-        
     print(f"model not found, training new one")
-    for md in [6]:
-        for ne in [500]:
-            for ni in [10]:
-                model = era_boost_train(training_data[features], training_data[TARGET_COL], era_col=training_data["era"], proportion=0.5, md=md, ne=ne, ni=ni)
-                gc.collect()
+    for md in [6]: # max depth
+        for ne in [500]: # num estimators
+            for lr in [0.001]: # learning rate
+                for cs in [0.1]: # colsample by tree
+                    for ni in [15]: # number of iterations
+                        model = era_boost_train(
+                            training_data[features], training_data[TARGET_COL], era_col=training_data["era"], proportion=0.5, md=md, ne=ne, ni=ni, lr=lr, cs=cs)
+                        gc.collect()
 
-    save_model(model, model_name)
+save_model(model, model_name)
 
 # getting the per era correlation of each feature vs the target
 all_feature_corrs = training_data.groupby(ERA_COL).apply(

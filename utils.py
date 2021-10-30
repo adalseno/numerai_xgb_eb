@@ -7,6 +7,7 @@ from halo import Halo
 from pathlib import Path
 import json
 from scipy.stats import skew, kurtosis
+from xgboost import XGBRegressor
 
 ERA_COL = "era"
 TARGET_COL = "target_nomi_20"
@@ -273,3 +274,52 @@ def download_data(napi, filename, dest_path):
     spinner.start(f'Downloading {dest_path}')
     napi.download_dataset(filename, dest_path)
     spinner.succeed()
+
+def ar1(x):
+    return np.corrcoef(x[:-1], x[1:])[0,1]
+
+def autocorr_penalty(x):
+    n = len(x)
+    p = ar1(x)
+    return np.sqrt(1 + 2*np.sum ([((n - i)/n)*p**i for i in range(1,n)]))
+
+def smart_sharpe(x):
+    return np.mean(x)/(np.std(x, ddof=1)*autocorr_penalty(x))
+
+def spearmanr(target, pred):
+    return np.corrcoef(
+        target,
+        pred.rank(pct=True, method="first")
+    )[0, 1]
+
+def era_boost_train(X, y, era_col, proportion, md, lr, cs, ne, ni):
+    model = XGBRegressor(max_depth=md, learning_rate=lr, n_estimators=ne, n_jobs=-1, colsample_bytree=cs)
+    features = X.columns
+    model.fit(X, y)
+    new_df = X.copy()
+    new_df[TARGET_COL] = y
+    new_df["era"] = era_col
+
+    for i in range(ni-1):
+        preds = model.predict(X)
+        new_df["pred"] = preds
+        era_scores = pd.Series(dtype='float32', index=new_df["era"].unique())
+
+        for era in new_df["era"].unique():
+            era_df = new_df[new_df["era"] == era]
+            era_scores[era] = spearmanr(era_df["pred"], era_df[TARGET_COL])
+        
+        era_scores.sort_values(inplace=False)
+        worst_eras = era_scores[era_scores <= era_scores.quantile(proportion)].index
+
+        worst_df = new_df[new_df["era"].isin(worst_eras)]
+        era_scores.sort_index(inplace=True)
+
+        print(f"md{md}_ne{ne}_ni{i}_{TARGET_COL}, auto corr: {ar1(era_scores)}, mean corr: {np.mean(era_scores)}, sharpe: {np.mean(era_scores)/np.std(era_scores)}, smart sharpe: {smart_sharpe(era_scores)}")
+
+        model.n_estimators += ne
+        booster = model.get_booster()
+        model.fit(worst_df[features], worst_df[TARGET_COL], xgb_model=booster)
+        save_model(model, "md" + str(md) + "_ne" + str(ne) + "_ni" + str(i) + "_" + str(TARGET_COL)) # save each iteration as a model for later comparison
+        
+    return model
