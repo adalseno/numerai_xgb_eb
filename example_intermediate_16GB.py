@@ -57,7 +57,7 @@ with open("features/features.json", "r") as f:
 
 # select feature set
 features = feature_metadata["feature_sets"]["medium"] # briefly uses 100% of 16GB, @15.4GB on average
-# features = feature_metadata["feature_sets"]["small"] # uses 1< 10GB
+# features = feature_metadata["feature_sets"]["small"] # uses 10< 10GB
 
 # read in just those features along with era and target columns
 read_columns = features + [ERA_COL, DATA_TYPE_COL, TARGET_COL]
