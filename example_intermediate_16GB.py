@@ -48,16 +48,15 @@ napi.download_dataset("numerai_training_data_int8.parquet", "training_data_int8.
 napi.download_dataset("numerai_tournament_data_int8.parquet", f"tournament_data_int8_{current_round}.parquet")
 napi.download_dataset("numerai_validation_data_int8.parquet", f"validation_data_int8.parquet")
 napi.download_dataset("example_validation_predictions.parquet", "example_validation_predictions.parquet")
-napi.download_dataset("features.json", "features.json")
+# napi.download_dataset("features.json", "features.json")
 
 print('Reading medium training data')
-# read the feature metadata and get the "small" feature set
-with open("features/features.json", "r") as f:
+# read the feature2 metadata and get the "xlsmall" feature set optimized for 16GB Machines
+with open("features2.json", "r") as f: 
     feature_metadata = json.load(f)
 
 # select feature set
-features = feature_metadata["feature_sets"]["medium"] # briefly uses 100% of 16GB, @15.4GB on average
-# features = feature_metadata["feature_sets"]["small"] # uses 10< 10GB
+features = feature_metadata["feature_sets"]["xlsmall"]
 
 # read in just those features along with era and target columns
 read_columns = features + [ERA_COL, DATA_TYPE_COL, TARGET_COL]
