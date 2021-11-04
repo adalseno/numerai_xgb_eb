@@ -119,8 +119,8 @@ if nans_per_col.any():
     total_rows = len(tournament_data[tournament_data["data_type"] == "live"])
     print(f"Number of nans per column this week: {nans_per_col[nans_per_col > 0]}")
     print(f"out of {total_rows} total rows")
-    print(f"filling nans with 0.5")
-    tournament_data.loc[:, features].fillna(0.5, inplace=True)
+    print(f"filling nans with 2")
+    tournament_data.loc[:, features].fillna(2, inplace=True)
 else:
     print("No nans in the features this week!")
 
