@@ -1,4 +1,4 @@
-Neutralization of xlsmall feats   | Model Name                    | Corr      | Sharpe   | Draw Down  | APY  |	
+Neutralization of xlsmall feats   | Model Name                    | Corr      | Sharpe  | Draw Down | APY    |
 --------------------------------------------------------------------------------------------------------------
 Neutralize: all features at 1.0   | md6_ne500_ni20_target_nomi_20 | 0.0193957 | 1.13201 | -0.037040 | 154.55 |
 Neutralize: all features at 0.75  | md6_ne500_ni20_target_nomi_20 | 0.0208566 | 1.10938 | -0.053323 | 172.67 |
@@ -20,7 +20,7 @@ Neutralize: 0.25 features at 0.75 | md6_ne500_ni20_target_nomi_20 | 0.0214403 | 
 Neutralize: 0.25 features at 0.5  | md6_ne500_ni20_target_nomi_20 | 0.0217711 | 1.03325 | -0.066586 | 184.30 | *
 Neutralize: 0.25 features at 0.25 | md6_ne500_ni20_target_nomi_20 | 0.0216604 | 0.96045 | -0.083267 | 182.36 |
 
-Nuetralization of xlsmall feats   | Model Name                    | Corr      | Sharpe   | Draw Down  | APY  |	
+Neutralization of xlsmall feats   | Model Name                    | Corr      | Sharpe  | Draw Down | APY    |
 --------------------------------------------------------------------------------------------------------------
 Neutralize: all features at 1.0   | md6_ne500_ni15_target_nomi_20 | 0.0188413 | 1.15920 | -0.036759 | 148.03 |
 Neutralize: all features at 0.75  | md6_ne500_ni15_target_nomi_20 | 0.0224668 | 1.02444 | -0.085295 | 193.69 | *
@@ -42,7 +42,7 @@ Neutralize: 0.25 features at 0.75 | md6_ne500_ni15_target_nomi_20 | 0.0232452 | 
 Neutralize: 0.25 features at 0.5  | md6_ne500_ni15_target_nomi_20 | 0.0243408 | 0.84904 | -0.163883 | 218.73 |
 Neutralize: 0.25 features at 0.25 | md6_ne500_ni15_target_nomi_20 | 0.0244838 | 0.75576 | -0.212271 | 219.22 |
 
-Nuetralization of xlsmall feats   | Model Name                    | Corr      | Sharpe   | Draw Down  | APY  |	
+Neutralization of xlsmall feats   | Model Name                    | Corr      | Sharpe  | Draw Down | APY    |
 --------------------------------------------------------------------------------------------------------------
 Neutralize: all features at 1.0   | md6_ne500_ni10_target_nomi_20 | 0.0204482 | 1.06965 | -0.063407 | 167.30 |
 Neutralize: all features at 0.75  | md6_ne500_ni10_target_nomi_20 | 0.0220630 | 1.03670 | -0.047131 | 188.26 |
@@ -64,7 +64,7 @@ Neutralize: 0.25 features at 0.75 | md6_ne500_ni10_target_nomi_20 | 0.0224415 | 
 Neutralize: 0.25 features at 0.5  | md6_ne500_ni10_target_nomi_20 | 0.0222950 | 0.90750 | -0.079820 | 190.45 |
 Neutralize: 0.25 features at 0.25 | md6_ne500_ni10_target_nomi_20 | 0.0217141 | 0.83004 | -0.097528 | 181.92 |
 
-Nuetralization of xlsmall feats   | Model Name                    | Corr      | Sharpe  | Draw Down | APY    |	
+Neutralization of xlsmall feats   | Model Name                    | Corr      | Sharpe  | Draw Down | APY    |
 --------------------------------------------------------------------------------------------------------------
 Neutralize: all features at 1.0   | md6_ne500_ni5_target_nomi_20  | 0.0200795 | 1.09659 | -0.057546 | 162.79 |
 Neutralize: all features at 0.75  | md6_ne500_ni5_target_nomi_20  | 0.0253433 | 0.93028 | -0.148826 | 234.99 |
