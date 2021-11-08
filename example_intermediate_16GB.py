@@ -1,8 +1,5 @@
 '''
-
-All code created by the team at Numerai.
-I've simply stitched together different pieces
-to achieve low memory consumption with acceptable diagnostics
+Unless noted otherwise all code created by the team at Numerai.
 
 '''
 
@@ -22,16 +19,10 @@ from utils import (
     load_model, 
     neutralize, 
     get_biggest_change_features, 
-    validation_metrics,
     ERA_COL,
     DATA_TYPE_COL,
-    TARGET_COL, 
-    EXAMPLE_PREDS_COL,
-    ar1,
-    autocorr_penalty,
-    smart_sharpe,
-    spearmanr,    
-    era_boost_train    
+    TARGET_COL, # currently only works with nomi_20
+    era_boost_train 
     )
 
 napi = NumerAPI()
@@ -48,9 +39,9 @@ napi.download_dataset("numerai_training_data_int8.parquet", "training_data_int8.
 napi.download_dataset("numerai_tournament_data_int8.parquet", f"tournament_data_int8_{current_round}.parquet")
 napi.download_dataset("numerai_validation_data_int8.parquet", f"validation_data_int8.parquet")
 napi.download_dataset("example_validation_predictions.parquet", "example_validation_predictions.parquet")
-# napi.download_dataset("features.json", "features.json")
+napi.download_dataset("features.json", "features.json")
 
-print('Reading medium training data')
+print('Reading xlsmall training data')
 # read the feature2 metadata and get the "xlsmall" feature set optimized for 16GB Machines
 with open("features2.json", "r") as f: 
     feature_metadata = json.load(f)
@@ -77,7 +68,7 @@ features = [c for c in training_data if c.startswith("feature_")]
 model_name = f"model_target" # the final iteration
 
 # alternatively, call a different iteration after your initial run.
-# model_name = f"md6_ne500_ni6_target_nomi_20" 
+# model_name = f"md6_ne500_ni20_target_nomi_20" 
 
 # load model if present
 print(f"loading {model_name}")
