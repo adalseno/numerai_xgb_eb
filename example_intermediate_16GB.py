@@ -19,9 +19,11 @@ from utils import (
     load_model, 
     neutralize, 
     get_biggest_change_features, 
+    validation_metrics,
     ERA_COL,
     DATA_TYPE_COL,
     TARGET_COL, # currently only works with nomi_20
+    EXAMPLE_PREDS_COL,
     era_boost_train 
     )
 
@@ -75,11 +77,11 @@ print(f"loading {model_name}")
 model = load_model(model_name)
 if not model:
     print(f"model not found, training new one")
-    for md in [6]: # max depth
+    for md in [3]: # max depth
         for ne in [500]: # num estimators
             for lr in [0.001]: # learning rate
                 for cs in [0.1]: # colsample by tree
-                    for ni in [15]: # number of iterations
+                    for ni in [3]: # number of iterations
                         model = era_boost_train(
                             training_data[features], training_data[TARGET_COL], era_col=training_data["era"], proportion=0.5, md=md, ne=ne, ni=ni, lr=lr, cs=cs)
                         gc.collect()
