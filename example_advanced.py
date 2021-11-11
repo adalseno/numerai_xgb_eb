@@ -1,3 +1,15 @@
+'''
+Using the advanced script on a 32GB machine only requires a couple of tweaks.
+
+- Use int8 data
+
+- If training (model_selection_loop = true) stop at the end of that process.
+Training takes 90% of your available memory.
+
+- If you're not training, you'll see a momentary memory usage of +95%, 
+when val and tournament load but it shouldn't crash you system.
+
+'''
 import pandas as pd
 from lightgbm import LGBMRegressor
 import gc
@@ -74,7 +86,7 @@ if model_selection_loop:
             lambda d: d[feature_cols].corrwith(d[TARGET_COL]))
         # find the riskiest features by comparing their correlation vs the target in half 1 and half 2 of training data
         # there are probably more clever ways to do this
-        riskiest_features_split = get_biggest_change_features(all_feature_corrs_split, 200)
+        riskiest_features_split = get_biggest_change_features(all_feature_corrs_split, 50)
 
         print(f"entering model training loop for split {split+1}")
         for target in targets:
@@ -105,7 +117,7 @@ if model_selection_loop:
                 df=training_data.loc[test_split_index, :],
                 columns=[f"preds_{model_name}"],
                 neutralizers=riskiest_features_split,
-                proportion=0.8,
+                proportion=1.0,
                 normalize=True,
                 era_col=ERA_COL)[f"preds_{model_name}"]
 
@@ -149,7 +161,7 @@ if model_selection_loop:
     all_feature_corrs = training_data.groupby(ERA_COL).apply(
         lambda d: d[feature_cols].corrwith(d[TARGET_COL]))
     # find the riskiest features by comparing their correlation vs the target in half 1 and half 2 of training data
-    riskiest_features = get_biggest_change_features(all_feature_corrs, 200)
+    riskiest_features = get_biggest_change_features(all_feature_corrs, 50)
 
     for target in targets:
         gc.collect()
@@ -243,13 +255,13 @@ for target in targets:
     validation_data[f"preds_{model_name}_neutral_riskiest_50"] = neutralize(df=validation_data,
                                                                             columns=[f"preds_{model_name}"],
                                                                             neutralizers=riskiest_features,
-                                                                            proportion=0.8,
+                                                                            proportion=1.0,
                                                                             normalize=True,
                                                                             era_col=ERA_COL)[f"preds_{model_name}"]
     tournament_data[f"preds_{model_name}_neutral_riskiest_50"] = neutralize(df=tournament_data,
                                                                             columns=[f"preds_{model_name}"],
                                                                             neutralizers=riskiest_features,
-                                                                            proportion=0.8,
+                                                                            proportion=1.0,
                                                                             normalize=True,
                                                                             era_col=ERA_COL)[f"preds_{model_name}"]
 
