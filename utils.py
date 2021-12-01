@@ -1,5 +1,4 @@
 import os
-import requests
 import numpy as np
 import pandas as pd
 import scipy
@@ -8,6 +7,7 @@ from pathlib import Path
 import json
 from scipy.stats import skew, kurtosis
 from xgboost import XGBRegressor
+import ast
 
 ERA_COL = "era"
 TARGET_COL = "target_nomi_20"
@@ -323,3 +323,88 @@ def era_boost_train(X, y, era_col, proportion, md, lr, cs, ne, ni):
         save_model(model, "md" + str(md) + "_ne" + str(ne) + "_ni" + str(i) + "_" + str(TARGET_COL)) # save each iteration as a model for later comparison
         
     return model
+
+
+def create_features_dict():
+    """
+    This function generates a dict with all the features from borutashap and saves it as json file for future usage.
+    
+    Returns:
+        dict : the dict with all the features
+
+    The json/dict structure is:
+    root:
+        - file name: 
+                    - feature type (['attributes confirmed important', 'attributes confirmed unimportant', 'temtative attributes remains'])
+    
+    You can then easily select the features filtering per target type (20, 60, all), feature importance, feature frequency and so on.
+    
+    Example usage:
+    
+    import json
+    from collections import Counter
+    
+    with open('features_dict.json') as f:
+        features_dict = json.load(f)
+    
+    important_features = []
+    tentative_features = []
+    unimportant_features = []
+
+    for key, value in features_dict.items():
+        important_features+= value['attributes confirmed important']
+        tentative_features += value['tentative attributes remains']
+        unimportant_features+= value['attributes confirmed unimportant']
+
+    print(f"Unique important features {len(set(important_features))} out of {len(important_features)}")
+    print(f"Unique tentative features {len(set(tentative_features))} out of {len(tentative_features)}")
+    print(f"Unique unimportant features {len(set(unimportant_features))} out of {len(unimportant_features)}")
+    print(f"Unique important features + tentative features {len(set(important_features+tentative_features))} out of {len(important_features+tentative_features)}")
+
+    important_feat_count = Counter(important_features).most_common()
+    tentative_feat_count = Counter(tentative_features).most_common()
+    unimportant_feat_count = Counter(unimportant_features).most_common()
+
+    Output:
+    Unique important features 345 out of 3517
+    Unique possible features 612 out of 4257
+    Unique unimportant features 1050 out of 76226
+    Unique important features + tentative features 622 out of 7774
+
+    Then we can select the features based on the desired criteria
+    cutoff = 5
+    selected_features_c5 = list(set([feat for feat, val in important_feat_count if val >= cutoff]+[feat for feat, val in possible_feat_count if val >= cutoff+5]))
+    print(f'Selected features that appear at least {cutoff} times as important and {cutoff + 5} as tentative: {len(selected_features_c5)}')
+
+    Output:
+    Selected features that appear at least 5 times as important and 10 as tentative: 258
+
+    # Or
+    cutoff = 80 # The files are 80 in total (20 targets x 4 eras) so these are the features marked as unimportant in each file
+    selected_features_c80 = list(set([feat for feat, val in unimportant_feat_count if val >= cutoff]))
+    print(f'Selected features that appear at least {cutoff} times as unimportant: {len(selected_features_c80)}')
+
+    Output:
+    Selected features that appear at least 80 times as unimportant: 428
+    """    
+    
+    features_dict = {}
+    dir_path = "./borutashap/raw_results/"
+
+    for filename in os.listdir(dir_path):
+        if filename.endswith(".txt"): 
+            group = filename.replace('.txt', '')
+            features_dict[group] = {}
+            with open(dir_path + filename, 'r') as f:
+                for line in f:
+                    l1 = line.split(":")
+                    # Remove numbers and spaces 
+                    feat_group = "".join([i for i in l1[0] if not i.isdigit()]).strip()
+                    # Safe transform string into list
+                    feat_list = ast.literal_eval(l1[1].strip())
+                    features_dict[group][feat_group] = feat_list
+                
+    with open('features_dict.json', 'w') as f:
+        json.dump(features_dict, f)
+
+    return features_dict
